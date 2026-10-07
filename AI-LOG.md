@@ -9,46 +9,40 @@ work. Add one entry per meaningful AI interaction — not every tiny tweak.
 
 ---
 
-## Entry template (copy this block for each use)
+**Date:** October 7, 2026
+**Member:** Dennis Mark L. Jamero
+**Feature / task:** Initial project setup — base kiosk application (HTML/CSS/JS)
+**Tool used:** Claude
 
-**Date:**
-**Member:**
-**Feature / task:**
-**Tool used:** (e.g. Claude, ChatGPT, GitHub Copilot)
+**Prompt (summarized):** Asked Claude to build a fully working touchscreen POS
+kiosk application matching the practical exam's required transaction flow
+(Item Selection, Order Review, Payment Method, Payment Processing, Payment
+Successful, Receipt, New Transaction), following the sample UI's functional
+flow but with a visually distinct design rather than a direct copy.
 
-**Prompt (summarized or verbatim):**
+**AI's response (summarized):** Provided a single self-contained index.html
+file implementing the full flow in vanilla HTML/CSS/JS — product grid with
+category filters, live cart with quantity controls, order review table,
+three payment methods (Cash with validation and change calculation, QR and
+Card as simulated flows), a Payment Successful confirmation with a generated
+transaction reference, a digital receipt, and a New Transaction reset. Also
+provided a starter README.md and this AI-LOG.md template.
 
+**Evaluation — was the output correct/usable as-is?** The app worked
+correctly on first test: cart math, insufficient-cash rejection, exact-change
+handling, and the receipt all matched the exam's expected values. The only
+issue was unrelated to the code itself — when first pushed, index.html
+appeared empty on GitHub because the content hadn't been saved into the
+tracked file before committing.
 
-**AI's response (summarized):**
-
-
-**Evaluation — was the output correct/usable as-is?**
-
-
-**Modifications made (what you changed and why):**
+**Modifications made (what you changed and why):** Re-copied the full file
+content into the tracked index.html in the local repo, verified with
+`git status` that it was picked up as a real change, then committed and
+pushed again so the complete file was reflected on GitHub.
 
 
 ---
 
-## Example entry (for reference — delete or replace with your own)
+---
 
-**Date:** 2026-10-07
-**Member:** [Name]
-**Feature / task:** Cash payment validation
-**Tool used:** Claude
-
-**Prompt (summarized):** Asked for logic to reject cash payments below the
-order total and calculate change correctly, including the exact-payment edge
-case.
-
-**AI's response (summarized):** Provided a function comparing amount paid to
-total, returning an error message when insufficient, and computing
-`change = amountPaid - total` otherwise.
-
-**Evaluation:** Logic was correct, but didn't initially handle a blank/empty
-input — would have thrown rather than showing a validation message.
-
-**Modifications made:** Added a check for empty or non-numeric input before
-the insufficient-funds comparison, and adjusted the error message wording to
-match the exam's required phrasing ("Insufficient payment. Please enter at
-least ₱___.").
+---
