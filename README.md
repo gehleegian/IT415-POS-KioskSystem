@@ -43,7 +43,7 @@ self-contained file, so there's no server or dependency setup needed.
 | Member | GitHub username | Feature branch(es) | Contribution |
 |---|---|---|---|
 | Dennis Mark L. Jamero | @sinnedun (https://github.com/sinnedun) | `main` (setup commit) | Initial project setup — added the base kiosk application (`index.html`), `README.md`, and `AI-LOG.md` to the shared repository |
-| gehleegian | @gehleegian (https://github.com/gehleegian) | `feature/ui-improvements` | Improved product controls, accessibility, payment-state safety, transaction references, receipt printing, validation, documentation, and automated tests |
+| Gian Carlo R. Marin | @gehleegian (https://github.com/gehleegian) | `feature/ui-improvements` | Improved product controls, accessibility, payment-state safety, transaction references, receipt printing, validation, documentation, and automated tests |
 
 ## Automated tests
 
