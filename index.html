@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snack Stop — Kiosk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1c1f26;
+    --ink-soft: #5a6072;
+    --paper: #f5f5f3;
+    --card: #ffffff;
+    --yellow: #f5c518;
+    --yellow-dark: #d6a910;
+    --teal: #0f9d8f;
+    --teal-dark: #0b7e73;
+    --red: #d94848;
+    --red-bg: #fdecec;
+    --green: #1f9d55;
+    --green-bg: #e9f8ee;
+    --border: #e3e2dd;
+    --radius: 14px;
+    --shadow: 0 2px 10px rgba(28,31,38,0.06);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, .display {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+  }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  /* ===== Header ===== */
+  .topbar {
+    background: var(--ink);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-badge {
+    width: 44px;
+    height: 44px;
+    background: var(--yellow);
+    color: var(--ink);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .brand-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    line-height: 1.1;
+  }
+
+  .brand-sub {
+    font-size: 0.78rem;
+    color: #9a9fae;
+  }
+
+  .stepper {
+    display: flex;
+    gap: 8px;
+  }
+
+  .step-pill {
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: #2b2f3a;
+    color: #9a9fae;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .step-pill.current {
+    background: var(--yellow);
+    color: var(--ink);
+  }
+
+  .step-pill.done {
+    background: #2b2f3a;
+    color: var(--teal);
+  }
+
+  /* ===== Screens ===== */
+  .screen {
+    display: none;
+    padding: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .screen.active {
+    display: block;
+  }
+
+  /* ===== Order screen ===== */
+  .order-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  .order-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .order-head h1 {
+    font-size: 1.7rem;
+    margin: 0;
+  }
+
+  .cat-filters {
+    display: flex;
+    gap: 8px;
+  }
+
+  .cat-btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: var(--card);
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+
+  .cat-btn.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .product-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0;
+    text-align: left;
+    overflow: hidden;
+    position: relative;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+
+  .product-card:active {
+    transform: scale(0.98);
+  }
+
+  .product-card.in-cart {
+    border-color: var(--teal);
+  }
+
+  .product-strip {
+    height: 6px;
+  }
+
+  .product-icon {
+    height: 92px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.4rem;
+  }
+
+  .product-info {
+    padding: 14px 16px 16px;
+  }
+
+  .product-name {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .product-price {
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+
+  .qty-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--teal);
+    color: #fff;
+    min-width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 0 6px;
+  }
+
+  /* ===== Cart panel ===== */
+  .cart-panel {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    padding: 20px;
+    position: sticky;
+    top: 20px;
+  }
+
+  .cart-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+
+  .cart-head h2 {
+    font-size: 1.15rem;
+    margin: 0;
+  }
+
+  .cart-count {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  .cart-empty {
+    text-align: center;
+    padding: 40px 10px;
+    color: var(--ink-soft);
+  }
+
+  .cart-empty-icon {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+  }
+
+  .cart-line {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cart-line-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .cart-line-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .cart-line-unit {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+  }
+
+  .remove-btn {
+    background: var(--red-bg);
+    color: var(--red);
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cart-line-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .qty-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .qty-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--paper);
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .qty-val {
+    font-weight: 700;
+    min-width: 16px;
+    text-align: center;
+  }
+
+  .cart-line-subtotal {
+    font-weight: 700;
+  }
+
+  .cart-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 16px 0;
+    padding-top: 14px;
+    border-top: 2px dashed var(--border);
+  }
+
+  .cart-total-label {
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+
+  .cart-total-amount {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--yellow);
+    color: var(--ink);
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-primary:disabled {
+    background: var(--border);
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
+
+  .btn-primary:not(:disabled):active {
+    background: var(--yellow-dark);
+  }
+
+  .btn-secondary {
+    width: 100%;
+    background: var(--card);
+    color: var(--ink);
+    border: 2px solid var(--border);
+    padding: 15px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  /* ===== Review screen ===== */
+  .review-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 2px solid var(--border);
+  }
+
+  .review-table th {
+    text-align: left;
+    background: var(--ink);
+    color: #fff;
+    padding: 14px 20px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .review-table th:last-child, .review-table td:last-child { text-align: right; }
+
+  .review-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+
+  .review-total-row td {
+    background: #fdf6dd;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    border-bottom: none;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 14px;
+    margin-top: 24px;
+    max-width: 480px;
+  }
+
+  /* ===== Payment method screen ===== */
+  .pay-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .amount-due-chip {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    text-align: right;
+  }
+
+  .amount-due-chip .label {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  .amount-due-chip .value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--teal-dark);
+  }
+
+  .method-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+
+  .method-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 20px;
+    text-align: center;
+  }
+
+  .method-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin: 0 auto 16px;
+  }
+
+  .method-card h3 {
+    margin: 0 0 8px;
+    font-size: 1.1rem;
+  }
+
+  .method-card p {
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+    margin: 0;
+  }
+
+  /* ===== Payment processing panels ===== */
+  .pay-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: start;
+  }
+
+  .pay-left {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+
+  .due-box {
+    background: var(--paper);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .due-box .label { color: var(--ink-soft); font-weight: 600; }
+  .due-box .value { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 700; }
+
+  .amount-input {
+    width: 100%;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    text-align: right;
+  }
+
+  .quick-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .quick-btn {
+    padding: 10px 6px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--paper);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .quick-btn.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+  }
+
+  .change-box {
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--green-bg);
+    margin-bottom: 18px;
+  }
+
+  .change-box .label { font-weight: 700; color: var(--green); }
+  .change-box .value { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--green); }
+
+  .change-box.insufficient {
+    background: var(--red-bg);
+  }
+  .change-box.insufficient .label, .change-box.insufficient .value { color: var(--red); }
+
+  .error-msg {
+    background: var(--red-bg);
+    color: var(--red);
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .key {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  .key:active { background: var(--paper); }
+
+  /* QR panel */
+  .qr-box {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px;
+    text-align: center;
+  }
+
+  .qr-placeholder {
+    width: 220px;
+    height: 220px;
+    margin: 0 auto 14px;
+    border: 3px dashed var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    background: var(--paper);
+  }
+
+  .qr-ref {
+    font-family: monospace;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+  }
+
+  .step-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+  }
+
+  .step-list li {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    background: var(--ink);
+    color: #fff;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* Card panel */
+  .card-visual {
+    background: linear-gradient(135deg, #2b2f3a, var(--ink));
+    border-radius: var(--radius);
+    padding: 40px 30px;
+    text-align: center;
+    color: #fff;
+  }
+
+  .card-amount {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--yellow);
+    margin-bottom: 20px;
+  }
+
+  .card-chip {
+    width: 90px;
+    height: 60px;
+    background: var(--teal);
+    border-radius: 10px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+  }
+
+  .processing-bar {
+    height: 8px;
+    background: #2b2f3a;
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+
+  .processing-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--yellow);
+    transition: width 1.4s linear;
+  }
+
+  .processing-note {
+    background: #fdf6dd;
+    color: #8a6d00;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  /* ===== Success screen ===== */
+  .success-wrap {
+    max-width: 520px;
+    margin: 20px auto 0;
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px;
+    text-align: center;
+  }
+
+  .success-check {
+    width: 72px;
+    height: 72px;
+    background: var(--green);
+    color: #fff;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 18px;
+  }
+
+  .success-wrap h2 {
+    color: var(--green);
+    margin: 0 0 6px;
+    font-size: 1.5rem;
+  }
+
+  .success-sub {
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .detail-row .k { color: var(--ink-soft); }
+
+  /* ===== Receipt screen ===== */
+  .receipt-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  .receipt-paper {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    font-family: monospace;
+  }
+
+  .receipt-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 2px;
+  }
+
+  .receipt-sub {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+  }
+
+  .receipt-divider {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 14px 0;
+  }
+
+  .receipt-item-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .receipt-item-meta {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+
+  .receipt-total-row {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin: 10px 0;
+  }
+
+  .receipt-field-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+
+  .receipt-status {
+    color: var(--green);
+    font-weight: 700;
+  }
+
+  .receipt-thanks {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.85rem;
+  }
+
+  .receipt-aside h1 {
+    font-size: 1.6rem;
+    margin: 0 0 10px;
+  }
+
+  .receipt-aside p {
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+  }
+
+  /* ===== Toast ===== */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: #fff;
+    padding: 13px 22px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 50;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .toast.error { background: var(--red); }
+  .toast.success { background: var(--green); }
+
+  @media (max-width: 860px) {
+    .order-layout, .pay-panel, .receipt-layout { grid-template-columns: 1fr; }
+    .product-grid { grid-template-columns: repeat(2, 1fr); }
+    .method-grid { grid-template-columns: 1fr; }
+    .stepper { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-badge">SS</div>
+    <div>
+      <div class="brand-name">Snack Stop</div>
+      <div class="brand-sub">Campus self-service kiosk</div>
+    </div>
+  </div>
+  <div class="stepper" id="stepper"></div>
+</div>
+
+<!-- SCREEN 1: ORDER SELECTION -->
+<div class="screen active" id="screen-order">
+  <div class="order-layout">
+    <div>
+      <div class="order-head">
+        <h1>Tap a product to add it</h1>
+        <div class="cat-filters" id="catFilters"></div>
+      </div>
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+
+    <div class="cart-panel">
+      <div class="cart-head">
+        <h2>Your Order</h2>
+        <span class="cart-count" id="cartCount">0 items</span>
+      </div>
+      <div id="cartBody"></div>
+      <div class="cart-total-row">
+        <span class="cart-total-label">Total</span>
+        <span class="cart-total-amount" id="cartTotal">₱0.00</span>
+      </div>
+      <button class="btn-primary" id="proceedBtn" onclick="goTo('review')" disabled>Proceed to Payment →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 2: ORDER REVIEW -->
+<div class="screen" id="screen-review">
+  <h1>Review your order</h1>
+  <p style="color:var(--ink-soft); margin-top:-8px;">Check your items before paying. Back keeps everything in your order.</p>
+  <table class="review-table">
+    <thead>
+      <tr><th>Product</th><th>Quantity</th><th>Unit price</th><th>Subtotal</th></tr>
+    </thead>
+    <tbody id="reviewBody"></tbody>
+    <tfoot>
+      <tr class="review-total-row">
+        <td colspan="3">Total Amount</td>
+        <td id="reviewTotal">₱0.00</td>
+      </tr>
+    </tfoot>
+  </table>
+  <div class="btn-row">
+    <button class="btn-secondary" onclick="goTo('order')">← Back</button>
+    <button class="btn-primary" onclick="goTo('method')">Continue to Payment →</button>
+  </div>
+</div>
+
+<!-- SCREEN 3: PAYMENT METHOD -->
+<div class="screen" id="screen-method">
+  <div class="pay-head">
+    <div>
+      <h1 style="margin:0;">How would you like to pay?</h1>
+      <p style="color:var(--ink-soft); margin:4px 0 0;">Tap one of the options below.</p>
+    </div>
+    <div class="amount-due-chip">
+      <div class="label">AMOUNT DUE</div>
+      <div class="value" id="dueAmount1">₱0.00</div>
+    </div>
+  </div>
+  <div class="method-grid">
+    <button class="method-card" onclick="goTo('cash')">
+      <div class="method-icon" style="background:var(--green-bg);">💵</div>
+      <h3>Cash</h3>
+      <p>Enter the amount you're paying. Change is computed for you.</p>
+    </button>
+    <button class="method-card" onclick="goTo('qr')">
+      <div class="method-icon" style="background:#e8eefd;">▦</div>
+      <h3>QR Payment</h3>
+      <p>Scan with a supported e-wallet or banking app.</p>
+    </button>
+    <button class="method-card" onclick="goTo('card')">
+      <div class="method-icon" style="background:#f3e8fd;">💳</div>
+      <h3>Credit / Debit Card</h3>
+      <p>Tap, insert, or swipe your card at the reader.</p>
+    </button>
+  </div>
+  <div class="btn-row">
+    <button class="btn-secondary" onclick="goTo('review')">← Back to Order</button>
+  </div>
+</div>
+
+<!-- SCREEN 3a: CASH -->
+<div class="screen" id="screen-cash">
+  <div class="pay-panel">
+    <div class="pay-left">
+      <h2 style="margin-top:0;">Cash Payment</h2>
+      <div class="due-box"><span class="label">Total amount</span><span class="value" id="cashDue">₱0.00</span></div>
+      <div id="cashError"></div>
+      <div class="label" style="font-weight:600; margin-bottom:6px;">Amount paid</div>
+      <input type="text" class="amount-input" id="cashInput" value="0" readonly>
+      <div class="quick-row" id="quickRow"></div>
+      <div class="change-box" id="changeBox">
+        <span class="label">Change</span>
+        <span class="value" id="changeValue">—</span>
+      </div>
+      <button class="btn-primary" onclick="payCash()">Pay Now</button>
+      <div style="height:10px;"></div>
+      <button class="btn-secondary" onclick="goTo('method')">← Change payment method</button>
+    </div>
+    <div class="pay-left">
+      <div class="keypad" id="keypad"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 3b: QR -->
+<div class="screen" id="screen-qr">
+  <div class="pay-panel">
+    <div class="qr-box">
+      <div class="qr-placeholder">▦</div>
+      <div class="qr-ref" id="qrRef">Ref: —</div>
+    </div>
+    <div>
+      <h2 style="margin-top:0;">QR Payment</h2>
+      <div class="due-box"><span class="label">Amount to pay</span><span class="value" id="qrDue">₱0.00</span></div>
+      <ul class="step-list">
+        <li><span class="step-num">1</span><span>Scan the QR code using your supported payment application.</span></li>
+        <li><span class="step-num">2</span><span>Check that the amount matches and approve it in your app.</span></li>
+        <li><span class="step-num">3</span><span>Tap Confirm Payment below.</span></li>
+      </ul>
+      <button class="btn-primary" onclick="payQR()">✓ Confirm Payment</button>
+      <div style="height:10px;"></div>
+      <button class="btn-secondary" onclick="goTo('method')">← Back</button>
+      <p style="color:var(--ink-soft); font-size:0.82rem; margin-top:14px;">Simulated payment — the amount paid will equal the total, with ₱0.00 change.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 3c: CARD -->
+<div class="screen" id="screen-card">
+  <div class="pay-panel">
+    <div class="card-visual">
+      <div class="card-amount" id="cardDue">₱0.00</div>
+      <div class="card-chip">💳</div>
+    </div>
+    <div>
+      <h2 style="margin-top:0;">Credit / Debit Card</h2>
+      <p style="color:var(--ink-soft);">Please tap, insert, or swipe your card.</p>
+      <div id="cardProcessingArea"></div>
+      <button class="btn-primary" id="cardProcessBtn" onclick="payCard()">Process Payment</button>
+      <div style="height:10px;"></div>
+      <button class="btn-secondary" onclick="goTo('method')">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 4: SUCCESS -->
+<div class="screen" id="screen-success">
+  <div class="success-wrap">
+    <div class="success-check">✓</div>
+    <h2>Payment Successful</h2>
+    <p class="success-sub">Transaction completed successfully. Thank you!</p>
+    <div class="detail-row"><span class="k">Transaction No.</span><span id="sTxn"></span></div>
+    <div class="detail-row"><span class="k">Payment method</span><span id="sMethod"></span></div>
+    <div class="detail-row"><span class="k">Transaction amount</span><span id="sAmount"></span></div>
+    <div class="detail-row"><span class="k">Amount paid</span><span id="sPaid"></span></div>
+    <div class="detail-row" style="border-bottom:none;"><span class="k">Change</span><span id="sChange"></span></div>
+    <div style="height:20px;"></div>
+    <button class="btn-primary" onclick="goTo('receipt')">🧾 View Receipt</button>
+  </div>
+</div>
+
+<!-- SCREEN 5: RECEIPT -->
+<div class="screen" id="screen-receipt">
+  <div class="receipt-layout">
+    <div class="receipt-paper">
+      <div class="receipt-title">SNACK STOP KIOSK</div>
+      <div class="receipt-sub">Self-Service Kiosk · Official Digital Receipt</div>
+      <hr class="receipt-divider">
+      <div class="receipt-field-row"><span>Transaction No.</span><span id="rTxn"></span></div>
+      <div class="receipt-field-row"><span>Date</span><span id="rDate"></span></div>
+      <hr class="receipt-divider">
+      <div id="rItems"></div>
+      <hr class="receipt-divider">
+      <div class="receipt-total-row"><span>TOTAL</span><span id="rTotal"></span></div>
+      <div class="receipt-field-row"><span>Payment method</span><span id="rMethod"></span></div>
+      <div class="receipt-field-row"><span>Amount paid</span><span id="rPaid"></span></div>
+      <div class="receipt-field-row"><span>Change</span><span id="rChange"></span></div>
+      <div class="receipt-field-row"><span>Status</span><span class="receipt-status" id="rStatus"></span></div>
+      <div class="receipt-thanks">Thank you for your purchase!</div>
+    </div>
+    <div class="receipt-aside">
+      <h1>Your receipt</h1>
+      <p>Keep this for your records. New Transaction clears your order and payment details.</p>
+      <button class="btn-primary" onclick="newTransaction()">+ New Transaction</button>
+      <div style="height:10px;"></div>
+      <button class="btn-secondary" onclick="window.print()">🖨 Print Receipt</button>
+      <p style="color:var(--ink-soft); font-size:0.8rem; margin-top:14px;">Printing is optional — the digital receipt is your proof of payment.</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   SNACK STOP KIOSK — application state and logic
+   Screens flow: order -> review -> method -> (cash|qr|card) -> success -> receipt -> (new) order
+   ============================================================ */
+
+const PRODUCTS = [
+  { id: 'coffee',   name: 'Coffee',        price: 40, category: 'Drinks', icon: '☕', color: '#f5c518' },
+  { id: 'icedtea',  name: 'Iced Tea',      price: 30, category: 'Drinks', icon: '🥤', color: '#0f9d8f' },
+  { id: 'sandwich', name: 'Sandwich',      price: 55, category: 'Food',   icon: '🥪', color: '#d94848' },
+  { id: 'siomai',   name: 'Siomai (6pc)',  price: 45, category: 'Food',   icon: '🥟', color: '#e08a2c' },
+  { id: 'chips',    name: 'Chips',         price: 20, category: 'Snacks', icon: '🍟', color: '#9b59b6' },
+  { id: 'choco',    name: 'Chocolate Bar', price: 25, category: 'Snacks', icon: '🍫', color: '#6d4c2f' },
+];
+
+let cart = {};          // { productId: quantity }
+let activeCategory = 'All';
+let paymentMethod = null;
+let txnCounter = 100;   // increments every completed transaction, guarantees unique refs
+let lastTxn = null;
+
+const screens = ['order', 'review', 'method', 'cash', 'qr', 'card', 'success', 'receipt'];
+const stepperSteps = [
+  { key: 'order',  label: '1 Order',   group: 'order' },
+  { key: 'review', label: '2 Review',  group: 'review' },
+  { key: 'pay',    label: '3 Payment', group: 'payment' },
+  { key: 'receipt',label: '4 Receipt', group: 'receipt' },
+];
+
+function peso(n) {
+  return '₱' + n.toFixed(2);
+}
+
+function showToast(message, type) {
+  const el = document.getElementById('toast');
+  el.textContent = message;
+  el.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => { el.className = 'toast'; }, 2200);
+}
+
+/* ---------- Navigation ---------- */
+function goTo(screen) {
+  const group = ['cash','qr','card'].includes(screen) ? 'payment' : (screen === 'success' ? 'receipt' : screen);
+  screens.forEach(s => {
+    document.getElementById('screen-' + s).classList.toggle('active', s === screen);
+  });
+  renderStepper(group);
+  if (screen === 'review') renderReview();
+  if (screen === 'method') renderMethod();
+  if (screen === 'cash') renderCash();
+  if (screen === 'qr') renderQR();
+  if (screen === 'card') renderCard();
+  window.scrollTo(0, 0);
+}
+
+function renderStepper(currentGroup) {
+  const order = ['order','review','payment','receipt'];
+  const idx = order.indexOf(currentGroup);
+  const wrap = document.getElementById('stepper');
+  wrap.innerHTML = stepperSteps.map((s, i) => {
+    const stepIdx = order.indexOf(s.group);
+    let cls = 'step-pill';
+    let label = s.label;
+    if (stepIdx < idx) { cls += ' done'; label = '✓ ' + s.label.replace(/^\d /,''); }
+    else if (stepIdx === idx) { cls += ' current'; }
+    return `<div class="${cls}">${label}</div>`;
+  }).join('');
+}
+
+/* ---------- Product grid + cart (Screen 1) ---------- */
+function renderCategoryFilters() {
+  const cats = ['All', ...new Set(PRODUCTS.map(p => p.category))];
+  document.getElementById('catFilters').innerHTML = cats.map(c =>
+    `<button class="cat-btn ${c === activeCategory ? 'active' : ''}" onclick="setCategory('${c}')">${c}</button>`
+  ).join('');
+}
+
+function setCategory(cat) {
+  activeCategory = cat;
+  renderCategoryFilters();
+  renderProductGrid();
+}
+
+function renderProductGrid() {
+  const list = activeCategory === 'All' ? PRODUCTS : PRODUCTS.filter(p => p.category === activeCategory);
+  document.getElementById('productGrid').innerHTML = list.map(p => {
+    const qty = cart[p.id] || 0;
+    return `
+      <button class="product-card ${qty > 0 ? 'in-cart' : ''}" onclick="addToCart('${p.id}')">
+        ${qty > 0 ? `<div class="qty-badge">${qty}</div>` : ''}
+        <div class="product-strip" style="background:${p.color};"></div>
+        <div class="product-icon" style="background:${p.color}22;">${p.icon}</div>
+        <div class="product-info">
+          <div class="product-name">${p.name}</div>
+          <div class="product-price">${peso(p.price)}</div>
+        </div>
+      </button>
+    `;
+  }).join('');
+}
+
+function addToCart(id) {
+  cart[id] = (cart[id] || 0) + 1;
+  const p = PRODUCTS.find(x => x.id === id);
+  showToast('Product added — ' + p.name, 'success');
+  renderProductGrid();
+  renderCart();
+}
+
+function changeQty(id, delta) {
+  if (!cart[id]) return;
+  cart[id] += delta;
+  if (cart[id] <= 0) {
+    delete cart[id];
+    showToast('Item removed');
+  }
+  renderProductGrid();
+  renderCart();
+}
+
+function removeItem(id) {
+  delete cart[id];
+  showToast('Item removed');
+  renderProductGrid();
+  renderCart();
+}
+
+function cartItems() {
+  return Object.keys(cart).map(id => {
+    const p = PRODUCTS.find(x => x.id === id);
+    const qty = cart[id];
+    return { ...p, qty, subtotal: p.price * qty };
+  });
+}
+
+function cartTotal() {
+  return cartItems().reduce((sum, i) => sum + i.subtotal, 0);
+}
+
+function renderCart() {
+  const items = cartItems();
+  const total = cartTotal();
+  const count = items.reduce((s, i) => s + i.qty, 0);
+
+  document.getElementById('cartCount').textContent = count + ' item' + (count === 1 ? '' : 's');
+  document.getElementById('cartTotal').textContent = peso(total);
+  document.getElementById('proceedBtn').disabled = items.length === 0;
+
+  const body = document.getElementById('cartBody');
+  if (items.length === 0) {
+    body.innerHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛒</div>Your order is empty<br><span style="font-size:0.85rem;">Tap a product to add it.</span></div>`;
+    return;
+  }
+
+  body.innerHTML = items.map(i => `
+    <div class="cart-line">
+      <div class="cart-line-top">
+        <div>
+          <div class="cart-line-name">${i.name}</div>
+          <div class="cart-line-unit">${peso(i.price)} each</div>
+        </div>
+        <button class="remove-btn" onclick="removeItem('${i.id}')">✕</button>
+      </div>
+      <div class="cart-line-bottom">
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty('${i.id}', -1)">−</button>
+          <span class="qty-val">${i.qty}</span>
+          <button class="qty-btn" onclick="changeQty('${i.id}', 1)">+</button>
+        </div>
+        <div class="cart-line-subtotal">${peso(i.subtotal)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ---------- Review (Screen 2) ---------- */
+function renderReview() {
+  const items = cartItems();
+  document.getElementById('reviewBody').innerHTML = items.map(i => `
+    <tr>
+      <td>${i.name}</td>
+      <td>${i.qty}</td>
+      <td>${peso(i.price)}</td>
+      <td>${peso(i.subtotal)}</td>
+    </tr>
+  `).join('');
+  document.getElementById('reviewTotal').textContent = peso(cartTotal());
+}
+
+/* ---------- Payment method (Screen 3) ---------- */
+function renderMethod() {
+  document.getElementById('dueAmount1').textContent = peso(cartTotal());
+}
+
+/* ---------- Cash payment ---------- */
+let cashAmount = 0;
+
+function renderCash() {
+  cashAmount = 0;
+  document.getElementById('cashInput').value = '0';
+  document.getElementById('cashDue').textContent = peso(cartTotal());
+  document.getElementById('cashError').innerHTML = '';
+  renderQuickAmounts();
+  renderChangePreview();
+
+  const keys = ['1','2','3','4','5','6','7','8','9','Clear','0','⌫'];
+  document.getElementById('keypad').innerHTML = keys.map(k =>
+    `<button class="key" onclick="keyPress('${k}')">${k}</button>`
+  ).join('');
+}
+
+function renderQuickAmounts() {
+  const total = cartTotal();
+  const options = [
+    { label: 'Exact', value: total },
+    { label: peso(Math.ceil(total / 50) * 50), value: Math.ceil(total / 50) * 50 },
+    { label: '₱500', value: 500 },
+    { label: '₱1,000', value: 1000 },
+  ];
+  document.getElementById('quickRow').innerHTML = options.map(o =>
+    `<button class="quick-btn" onclick="setCashAmount(${o.value})">${o.label}</button>`
+  ).join('');
+}
+
+function setCashAmount(v) {
+  cashAmount = v;
+  document.getElementById('cashInput').value = v.toString();
+  renderChangePreview();
+}
+
+function keyPress(k) {
+  let str = document.getElementById('cashInput').value;
+  if (k === 'Clear') { str = '0'; }
+  else if (k === '⌫') { str = str.length > 1 ? str.slice(0, -1) : '0'; }
+  else { str = (str === '0') ? k : str + k; }
+  str = str.replace(/^0+(?=\d)/, '');
+  document.getElementById('cashInput').value = str;
+  cashAmount = parseFloat(str) || 0;
+  renderChangePreview();
+}
+
+function renderChangePreview() {
+  const total = cartTotal();
+  const box = document.getElementById('changeBox');
+  const val = document.getElementById('changeValue');
+  if (cashAmount > 0 && cashAmount >= total) {
+    box.className = 'change-box';
+    val.textContent = peso(cashAmount - total);
+  } else if (cashAmount > 0 && cashAmount < total) {
+    box.className = 'change-box insufficient';
+    val.textContent = peso(cashAmount - total);
+  } else {
+    box.className = 'change-box';
+    val.textContent = '—';
+  }
+}
+
+function payCash() {
+  const total = cartTotal();
+  const errBox = document.getElementById('cashError');
+  if (!cashAmount || cashAmount <= 0) {
+    errBox.innerHTML = `<div class="error-msg">⚠ Please enter an amount.</div>`;
+    showToast('Invalid amount', 'error');
+    return;
+  }
+  if (cashAmount < total) {
+    const short = (total - cashAmount).toFixed(2);
+    errBox.innerHTML = `<div class="error-msg">⚠ Insufficient payment. Please enter at least ${peso(total)}. You are short by ₱${short}.</div>`;
+    showToast('Insufficient payment', 'error');
+    return;
+  }
+  errBox.innerHTML = '';
+  completeTransaction('Cash', cashAmount, cashAmount - total);
+}
+
+/* ---------- QR payment (simulated) ---------- */
+function renderQR() {
+  document.getElementById('qrDue').textContent = peso(cartTotal());
+  document.getElementById('qrRef').textContent = 'Ref: QR-' + Date.now().toString().slice(-8);
+}
+
+function payQR() {
+  const total = cartTotal();
+  completeTransaction('QR Payment', total, 0);
+}
+
+/* ---------- Card payment (simulated) ---------- */
+function renderCard() {
+  document.getElementById('cardDue').textContent = peso(cartTotal());
+  document.getElementById('cardProcessingArea').innerHTML = '';
+  document.getElementById('cardProcessBtn').disabled = false;
+  document.getElementById('cardProcessBtn').textContent = 'Process Payment';
+}
+
+function payCard() {
+  const btn = document.getElementById('cardProcessBtn');
+  btn.disabled = true;
+  btn.textContent = 'Processing…';
+  document.getElementById('cardProcessingArea').innerHTML = `
+    <div class="processing-bar"><div class="processing-fill" id="procFill"></div></div>
+    <div class="processing-note">Do not remove your card until the payment is complete.</div>
+  `;
+  requestAnimationFrame(() => {
+    document.getElementById('procFill').style.width = '100%';
+  });
+  setTimeout(() => {
+    const total = cartTotal();
+    completeTransaction('Credit/Debit Card', total, 0);
+  }, 1500);
+}
+
+/* ---------- Completion ---------- */
+function completeTransaction(method, paid, change) {
+  const total = cartTotal();
+  txnCounter += 1;
+  const year = new Date().getFullYear();
+  lastTxn = {
+    id: `TXN-${year}-${String(txnCounter).padStart(5, '0')}`,
+    date: new Date(),
+    items: cartItems(),
+    total, method, paid, change,
+  };
+  paymentMethod = method;
+
+  document.getElementById('sTxn').textContent = lastTxn.id;
+  document.getElementById('sMethod').textContent = method;
+  document.getElementById('sAmount').textContent = peso(total);
+  document.getElementById('sPaid').textContent = peso(paid);
+  document.getElementById('sChange').textContent = peso(change);
+
+  showToast('Transaction completed successfully', 'success');
+  goTo('success');
+}
+
+/* ---------- Receipt ---------- */
+function renderReceipt() {
+  if (!lastTxn) return;
+  document.getElementById('rTxn').textContent = lastTxn.id;
+  document.getElementById('rDate').textContent = lastTxn.date.toLocaleString('en-PH', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
+  document.getElementById('rItems').innerHTML = lastTxn.items.map(i => `
+    <div class="receipt-item-row"><span>${i.name}</span><span>${peso(i.subtotal)}</span></div>
+    <div class="receipt-item-meta">${i.qty} × ${peso(i.price)}</div>
+  `).join('');
+  document.getElementById('rTotal').textContent = peso(lastTxn.total);
+  document.getElementById('rMethod').textContent = lastTxn.method;
+  document.getElementById('rPaid').textContent = peso(lastTxn.paid);
+  document.getElementById('rChange').textContent = peso(lastTxn.change);
+  document.getElementById('rStatus').textContent = 'Payment Successful';
+}
+
+/* override goTo to render receipt data when needed */
+const _origGoTo = goTo;
+goTo = function(screen) {
+  _origGoTo(screen);
+  if (screen === 'receipt') renderReceipt();
+};
+
+/* ---------- New transaction (reset) ---------- */
+function newTransaction() {
+  cart = {};
+  paymentMethod = null;
+  lastTxn = null;
+  cashAmount = 0;
+  renderProductGrid();
+  renderCart();
+  showToast('New transaction started — previous order cleared', 'success');
+  goTo('order');
+}
+
+/* ---------- Init ---------- */
+renderCategoryFilters();
+renderProductGrid();
+renderCart();
+renderStepper('order');
+</script>
+
+</body>
+</html>
