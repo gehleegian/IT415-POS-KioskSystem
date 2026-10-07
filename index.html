@@ -452,6 +452,35 @@
     font-size: 1rem;
   }
 
+  .btn-secondary:disabled {
+    color: var(--ink-soft);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .cancel-order-btn { margin-top: 10px; }
+
+  .cancel-dialog {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(420px, calc(100% - 32px));
+    max-height: calc(100% - 32px);
+    padding: 28px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--ink);
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  }
+
+  .cancel-dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+  .cancel-dialog h2 { margin: 0 0 12px; }
+  .cancel-dialog p { color: var(--ink-soft); margin: 0 0 24px; }
+  .cancel-dialog-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .cancel-dialog-actions button { flex: 1 1 150px; }
+
   /* ===== Review screen ===== */
   .review-table {
     width: 100%;
@@ -1011,6 +1040,7 @@
         <span class="cart-total-amount" id="cartTotal">₱0.00</span>
       </div>
       <button class="btn-primary" id="proceedBtn" onclick="goTo('review')" disabled>Proceed to Payment →</button>
+      <button type="button" class="btn-secondary cancel-order-btn" id="cancelOrderBtn" onclick="cancelOrder()" disabled>Cancel Order</button>
     </div>
   </div>
 </div>
@@ -1084,7 +1114,7 @@
       <span class="sr-only" id="cashLimitHint">Enter up to seven digits using the keypad.</span>
       <div class="quick-row" id="quickRow"></div>
       <div class="change-box" id="changeBox" role="status" aria-live="polite">
-        <span class="label">Change</span>
+        <span class="label" id="changeLabel">Change</span>
         <span class="value" id="changeValue">—</span>
       </div>
       <button class="btn-primary" onclick="payCash()">Pay Now</button>
@@ -1183,6 +1213,15 @@
     </div>
   </div>
 </div>
+
+<dialog class="cancel-dialog" id="cancelOrderDialog" aria-labelledby="cancelOrderTitle" aria-describedby="cancelOrderDescription">
+  <h2 id="cancelOrderTitle">Cancel this order?</h2>
+  <p id="cancelOrderDescription">All items will be removed. You can start a new order afterwards.</p>
+  <div class="cancel-dialog-actions">
+    <button type="button" class="btn-secondary" onclick="keepOrder()" autofocus>Keep Order</button>
+    <button type="button" class="btn-primary" onclick="confirmCancelOrder()">Cancel Order</button>
+  </div>
+</dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
@@ -1405,6 +1444,7 @@ function renderCart() {
   document.getElementById('cartCount').textContent = count + ' item' + (count === 1 ? '' : 's');
   document.getElementById('cartTotal').textContent = peso(total);
   document.getElementById('proceedBtn').disabled = items.length === 0;
+  document.getElementById('cancelOrderBtn').disabled = items.length === 0;
 
   const body = document.getElementById('cartBody');
   if (items.length === 0) {
@@ -1477,7 +1517,11 @@ function renderQuickAmounts() {
     { label: '₱500', value: 500 },
     { label: '₱1,000', value: 1000 },
   ];
-  document.getElementById('quickRow').innerHTML = options.map(o =>
+  const eligibleOptions = options.filter((option, index) =>
+    option.value >= total &&
+    options.findIndex(candidate => candidate.value === option.value) === index
+  );
+  document.getElementById('quickRow').innerHTML = eligibleOptions.map(o =>
     `<button class="quick-btn" onclick="setCashAmount(${o.value})">${o.label}</button>`
   ).join('');
 }
@@ -1517,12 +1561,15 @@ function renderChangePreview() {
   const total = cartTotal();
   const box = document.getElementById('changeBox');
   const val = document.getElementById('changeValue');
+  const label = document.getElementById('changeLabel');
+  label.textContent = 'Change';
   if (cashAmount > 0 && cashAmount >= total) {
     box.className = 'change-box';
     val.textContent = peso(cashAmount - total);
   } else if (cashAmount > 0 && cashAmount < total) {
     box.className = 'change-box insufficient';
-    val.textContent = peso(cashAmount - total);
+    label.textContent = 'Amount short';
+    val.textContent = peso(total - cashAmount);
   } else {
     box.className = 'change-box';
     val.textContent = '—';
@@ -1664,12 +1711,33 @@ goTo = function(screen) {
 };
 
 /* ---------- New transaction (reset) ---------- */
+function cancelOrder() {
+  if (cartItems().length === 0 || lastTxn) return;
+  const dialog = document.getElementById('cancelOrderDialog');
+  if (!dialog.open) dialog.showModal();
+}
+
+function keepOrder() {
+  document.getElementById('cancelOrderDialog').close();
+}
+
+function confirmCancelOrder() {
+  const dialog = document.getElementById('cancelOrderDialog');
+  if (!dialog.open) return;
+  dialog.close();
+  if (cartItems().length === 0 || lastTxn) return;
+  newTransaction();
+  showToast('Order cancelled — ready for a new order', 'success');
+}
+
 function newTransaction() {
   cancelCardPayment();
   cart = {};
   paymentMethod = null;
   lastTxn = null;
   cashAmount = 0;
+  activeCategory = 'All';
+  renderCategoryFilters();
   renderProductGrid();
   renderCart();
   showToast('New transaction started — previous order cleared', 'success');
