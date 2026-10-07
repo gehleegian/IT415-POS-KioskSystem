@@ -44,6 +44,9 @@ self-contained file, so there's no server or dependency setup needed.
 |---|---|---|---|
 | Dennis Mark L. Jamero | @sinnedun (https://github.com/sinnedun) | `main` (setup commit) | Initial project setup — added the base kiosk application (`index.html`), `README.md`, and `AI-LOG.md` to the shared repository |
 | Gian Carlo R. Marin | @gehleegian (https://github.com/gehleegian) | `feature/ui-improvements` | Improved product controls, accessibility, payment-state safety, transaction references, receipt printing, validation, documentation, and automated tests |
+| Wendyl Ziv Arellano | @(https://github.com/Boytooo) | `feature/wendyl-improvements` | Improve cash payment guidance and add cancel order dialog- #2
+ |
+
 
 ## Automated tests
 
