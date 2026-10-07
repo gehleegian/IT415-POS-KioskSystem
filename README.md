@@ -42,7 +42,7 @@ self-contained file, so there's no server or dependency setup needed.
 ## Group contributions
 | Member | GitHub username | Feature branch(es) | Contribution |
 |---|---|---|---|
-| [Name] | [@username] | `feature/...` | [What they built] |
+| Dennis Mark L. Jamero | @sinnedun (https://github.com/sinnedun) | `main` (setup commit) | Initial project setup — added the base kiosk application (`index.html`), `README.md`, and `AI-LOG.md` to the shared repository |
 | [Name] | [@username] | `feature/...` | [What they built] |
 | [Name] | [@username] | `feature/...` | [What they built] |
 
