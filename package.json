@@ -1,0 +1,12 @@
+{
+  "name": "it415-pos-kiosk-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Automated checks for the Snack Stop touchscreen POS kiosk",
+  "scripts": {
+    "test": "node --test tests/kiosk.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

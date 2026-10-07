@@ -6,7 +6,7 @@ payment method, complete payment, and receive a digital receipt.
 
 ## How to run it
 No build tools or installation required.
-1. Clone this repository: `git clone <repo-url>`
+1. Clone this repository: `git clone https://github.com/gehleegian/IT415-POS-KioskSystem.git`
 2. Open `index.html` directly in any modern web browser (double-click it, or
    right-click → Open With → your browser).
 
@@ -18,15 +18,15 @@ self-contained file, so there's no server or dependency setup needed.
   Chosen for simplicity, zero build-step setup, and because every group
   member can read and explain the full codebase without needing to learn a
   framework first.
-- **Data storage:** In-memory JavaScript state (a `cart` object and a
-  `PRODUCTS` array). No database is used, since the kiosk only needs to
-  track one active order/session at a time and the exam does not require
-  persistence between sessions.
+- **Data storage:** In-memory JavaScript state tracks the active order. A
+  transaction counter is stored in the browser's `localStorage` so receipt
+  references do not reset when the kiosk page is refreshed. No database is
+  used because the exam does not require cross-device persistence.
 - **Styling:** Plain CSS with CSS custom properties (`:root` variables) for
   the color system, and Google Fonts (Space Grotesk + Inter) for type.
 
 ## Required transaction flow
-1. **Item Selection** — tap product cards to add them; adjust quantity with
+1. **Item Selection** — tap a product's `+` button to add it; adjust quantity with
    +/− controls in the cart panel; remove items entirely.
 2. **Order Review** — confirms the same items, quantities, and total from
    Item Selection before payment.
@@ -43,11 +43,20 @@ self-contained file, so there's no server or dependency setup needed.
 | Member | GitHub username | Feature branch(es) | Contribution |
 |---|---|---|---|
 | Dennis Mark L. Jamero | @sinnedun (https://github.com/sinnedun) | `main` (setup commit) | Initial project setup — added the base kiosk application (`index.html`), `README.md`, and `AI-LOG.md` to the shared repository |
-| [Name] | [@username] | `feature/...` | [What they built] |
-| [Name] | [@username] | `feature/...` | [What they built] |
+| gehleegian | @gehleegian (https://github.com/gehleegian) | `feature/ui-improvements` | Improved product controls, accessibility, payment-state safety, transaction references, receipt printing, validation, documentation, and automated tests |
 
-*(Fill in actual names, usernames, and branches before submission — this maps
-directly to the Member Register on the Acceptance Checklist.)*
+## Automated tests
+
+The test suite uses Node.js's built-in test runner and requires no package
+installation. With Node.js 18 or newer installed, run:
+
+```bash
+npm test
+```
+
+The tests cover cart totals and quantity limits, cash validation, transaction
+reset behavior, persistent transaction counters, duplicate-payment protection,
+and cancellation of an in-progress card payment.
 
 ## AI usage
 See `AI-LOG.md` in this repository for documented AI prompts, responses,
