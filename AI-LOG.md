@@ -43,6 +43,35 @@ pushed again so the complete file was reflected on GitHub.
 
 ---
 
+**Date:** October 7, 2026
+**Member:** Gian Carlo R. Marin
+**Feature / task:** UI, accessibility, transaction safety, and automated tests
+**Tool used:** ChatGPT Codex
+
+**Prompt (summarized):** Asked Codex to analyze the existing kiosk, add a
+dedicated `+` product button, update its instructions, and fix the nine
+recommended reliability, accessibility, print, validation, testing, and
+documentation issues.
+
+**AI's response (summarized):** Reviewed the single-file application and
+implemented explicit product controls, larger accessible cart controls,
+keyboard and screen-reader improvements, bounded input values, cancellation
+of pending card payments, duplicate-completion protection, persistent receipt
+numbers, receipt-only print styling, dependency-free automated tests, and
+completed project documentation.
+
+**Evaluation — was the output correct/usable as-is?** The JavaScript passed a
+syntax check, the application initialized in a headless browser, and the Node
+test suite passed all transaction scenarios.
+
+**Modifications made (what you changed and why):** Integrated the suggested
+changes into the existing visual design, kept QR and card payments explicitly
+simulated for the exam scope, and used browser `localStorage` only for the
+transaction counter so the active order still resets between kiosk sessions.
+
+
+---
+
 ---
 
 ---

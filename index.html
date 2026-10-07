@@ -27,6 +27,18 @@
 
   * { box-sizing: border-box; }
 
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   body {
     margin: 0;
     background: var(--paper);
@@ -221,6 +233,44 @@
     font-weight: 600;
   }
 
+  .product-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .product-add-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 10px;
+    background: var(--yellow);
+    color: var(--ink);
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .product-add-btn:hover,
+  .product-add-btn:focus-visible {
+    background: var(--yellow-dark);
+  }
+
+  .product-add-btn:focus-visible {
+    outline: 3px solid var(--teal);
+    outline-offset: 2px;
+  }
+
+  .product-add-btn:active {
+    background: var(--yellow-dark);
+    transform: scale(0.95);
+  }
+
   .qty-badge {
     position: absolute;
     top: 10px;
@@ -302,8 +352,8 @@
     background: var(--red-bg);
     color: var(--red);
     border: none;
-    width: 28px;
-    height: 28px;
+    width: 44px;
+    height: 44px;
     border-radius: 8px;
     font-size: 0.9rem;
     display: flex;
@@ -324,8 +374,8 @@
   }
 
   .qty-btn {
-    width: 28px;
-    height: 28px;
+    width: 44px;
+    height: 44px;
     border-radius: 8px;
     border: 2px solid var(--border);
     background: var(--paper);
@@ -893,6 +943,37 @@
     .method-grid { grid-template-columns: 1fr; }
     .stepper { display: none; }
   }
+
+  @media print {
+    @page { margin: 12mm; }
+
+    body { background: #fff; }
+
+    .topbar,
+    .receipt-aside,
+    .toast {
+      display: none !important;
+    }
+
+    .screen {
+      display: none !important;
+      max-width: none;
+      padding: 0;
+    }
+
+    #screen-receipt.active { display: block !important; }
+
+    .receipt-layout { display: block; }
+
+    .receipt-paper {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
 </style>
 </head>
 <body>
@@ -905,7 +986,7 @@
       <div class="brand-sub">Campus self-service kiosk</div>
     </div>
   </div>
-  <div class="stepper" id="stepper"></div>
+  <div class="stepper" id="stepper" aria-label="Checkout progress"></div>
 </div>
 
 <!-- SCREEN 1: ORDER SELECTION -->
@@ -913,7 +994,7 @@
   <div class="order-layout">
     <div>
       <div class="order-head">
-        <h1>Tap a product to add it</h1>
+        <h1>Choose a product and tap + to add it</h1>
         <div class="cat-filters" id="catFilters"></div>
       </div>
       <div class="product-grid" id="productGrid"></div>
@@ -939,6 +1020,7 @@
   <h1>Review your order</h1>
   <p style="color:var(--ink-soft); margin-top:-8px;">Check your items before paying. Back keeps everything in your order.</p>
   <table class="review-table">
+    <caption class="sr-only">Order items and total</caption>
     <thead>
       <tr><th>Product</th><th>Quantity</th><th>Unit price</th><th>Subtotal</th></tr>
     </thead>
@@ -996,11 +1078,12 @@
     <div class="pay-left">
       <h2 style="margin-top:0;">Cash Payment</h2>
       <div class="due-box"><span class="label">Total amount</span><span class="value" id="cashDue">₱0.00</span></div>
-      <div id="cashError"></div>
-      <div class="label" style="font-weight:600; margin-bottom:6px;">Amount paid</div>
-      <input type="text" class="amount-input" id="cashInput" value="0" readonly>
+      <div id="cashError" role="alert" aria-live="assertive"></div>
+      <label for="cashInput" class="label" style="display:block; font-weight:600; margin-bottom:6px;">Amount paid</label>
+      <input type="text" class="amount-input" id="cashInput" value="0" inputmode="numeric" aria-describedby="cashLimitHint" readonly>
+      <span class="sr-only" id="cashLimitHint">Enter up to seven digits using the keypad.</span>
       <div class="quick-row" id="quickRow"></div>
-      <div class="change-box" id="changeBox">
+      <div class="change-box" id="changeBox" role="status" aria-live="polite">
         <span class="label">Change</span>
         <span class="value" id="changeValue">—</span>
       </div>
@@ -1047,7 +1130,7 @@
     <div>
       <h2 style="margin-top:0;">Credit / Debit Card</h2>
       <p style="color:var(--ink-soft);">Please tap, insert, or swipe your card.</p>
-      <div id="cardProcessingArea"></div>
+      <div id="cardProcessingArea" role="status" aria-live="polite"></div>
       <button class="btn-primary" id="cardProcessBtn" onclick="payCard()">Process Payment</button>
       <div style="height:10px;"></div>
       <button class="btn-secondary" onclick="goTo('method')">← Back</button>
@@ -1101,7 +1184,7 @@
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 /* ============================================================
@@ -1118,11 +1201,16 @@ const PRODUCTS = [
   { id: 'choco',    name: 'Chocolate Bar', price: 25, category: 'Snacks', icon: '🍫', color: '#6d4c2f' },
 ];
 
+const MAX_ITEM_QUANTITY = 99;
+const MAX_CASH_DIGITS = 7;
+const TXN_COUNTER_KEY = 'snackStopTxnCounter';
+
 let cart = {};          // { productId: quantity }
 let activeCategory = 'All';
 let paymentMethod = null;
-let txnCounter = 100;   // increments every completed transaction, guarantees unique refs
+let txnCounter = loadTransactionCounter();
 let lastTxn = null;
+let cardPaymentTimer = null;
 
 const screens = ['order', 'review', 'method', 'cash', 'qr', 'card', 'success', 'receipt'];
 const stepperSteps = [
@@ -1136,6 +1224,27 @@ function peso(n) {
   return '₱' + n.toFixed(2);
 }
 
+function loadTransactionCounter() {
+  try {
+    const stored = Number.parseInt(localStorage.getItem(TXN_COUNTER_KEY), 10);
+    return Number.isSafeInteger(stored) && stored >= 100 ? stored : 100;
+  } catch {
+    return 100;
+  }
+}
+
+function nextTransactionId() {
+  txnCounter += 1;
+  try {
+    localStorage.setItem(TXN_COUNTER_KEY, String(txnCounter));
+  } catch {
+    // Some browsers can block storage for local files. The in-memory counter
+    // still keeps references unique for the current kiosk session.
+  }
+  const year = new Date().getFullYear();
+  return `TXN-${year}-${String(txnCounter).padStart(5, '0')}`;
+}
+
 function showToast(message, type) {
   const el = document.getElementById('toast');
   el.textContent = message;
@@ -1146,6 +1255,9 @@ function showToast(message, type) {
 
 /* ---------- Navigation ---------- */
 function goTo(screen) {
+  if (!screens.includes(screen)) return;
+  if (screen !== 'card') cancelCardPayment();
+
   const group = ['cash','qr','card'].includes(screen) ? 'payment' : (screen === 'success' ? 'receipt' : screen);
   screens.forEach(s => {
     document.getElementById('screen-' + s).classList.toggle('active', s === screen);
@@ -1157,6 +1269,12 @@ function goTo(screen) {
   if (screen === 'qr') renderQR();
   if (screen === 'card') renderCard();
   window.scrollTo(0, 0);
+
+  const heading = document.getElementById('screen-' + screen).querySelector('h1, h2');
+  if (heading) {
+    heading.setAttribute('tabindex', '-1');
+    heading.focus({ preventScroll: true });
+  }
 }
 
 function renderStepper(currentGroup) {
@@ -1169,7 +1287,8 @@ function renderStepper(currentGroup) {
     let label = s.label;
     if (stepIdx < idx) { cls += ' done'; label = '✓ ' + s.label.replace(/^\d /,''); }
     else if (stepIdx === idx) { cls += ' current'; }
-    return `<div class="${cls}">${label}</div>`;
+    const current = stepIdx === idx ? ' aria-current="step"' : '';
+    return `<div class="${cls}"${current}>${label}</div>`;
   }).join('');
 }
 
@@ -1177,7 +1296,7 @@ function renderStepper(currentGroup) {
 function renderCategoryFilters() {
   const cats = ['All', ...new Set(PRODUCTS.map(p => p.category))];
   document.getElementById('catFilters').innerHTML = cats.map(c =>
-    `<button class="cat-btn ${c === activeCategory ? 'active' : ''}" onclick="setCategory('${c}')">${c}</button>`
+    `<button class="cat-btn ${c === activeCategory ? 'active' : ''}" onclick="setCategory('${c}')" aria-pressed="${c === activeCategory}">${c}</button>`
   ).join('');
 }
 
@@ -1188,26 +1307,55 @@ function setCategory(cat) {
 }
 
 function renderProductGrid() {
-  const list = activeCategory === 'All' ? PRODUCTS : PRODUCTS.filter(p => p.category === activeCategory);
+  const list = activeCategory === 'All'
+    ? PRODUCTS
+    : PRODUCTS.filter(p => p.category === activeCategory);
+
   document.getElementById('productGrid').innerHTML = list.map(p => {
     const qty = cart[p.id] || 0;
+
     return `
-      <button class="product-card ${qty > 0 ? 'in-cart' : ''}" onclick="addToCart('${p.id}')">
+      <div class="product-card ${qty > 0 ? 'in-cart' : ''}">
         ${qty > 0 ? `<div class="qty-badge">${qty}</div>` : ''}
+
         <div class="product-strip" style="background:${p.color};"></div>
-        <div class="product-icon" style="background:${p.color}22;">${p.icon}</div>
+
+        <div class="product-icon" style="background:${p.color}22;">
+          ${p.icon}
+        </div>
+
         <div class="product-info">
           <div class="product-name">${p.name}</div>
-          <div class="product-price">${peso(p.price)}</div>
+
+          <div class="product-bottom">
+            <div class="product-price">${peso(p.price)}</div>
+
+            <button
+              type="button"
+              class="product-add-btn"
+              onclick="addToCart('${p.id}')"
+              aria-label="Add ${p.name} to order"
+            >
+              +
+            </button>
+          </div>
         </div>
-      </button>
+      </div>
     `;
   }).join('');
 }
 
 function addToCart(id) {
-  cart[id] = (cart[id] || 0) + 1;
   const p = PRODUCTS.find(x => x.id === id);
+  if (!p) return;
+
+  const currentQty = cart[id] || 0;
+  if (currentQty >= MAX_ITEM_QUANTITY) {
+    showToast(`Maximum quantity is ${MAX_ITEM_QUANTITY}`, 'error');
+    return;
+  }
+
+  cart[id] = currentQty + 1;
   showToast('Product added — ' + p.name, 'success');
   renderProductGrid();
   renderCart();
@@ -1215,6 +1363,12 @@ function addToCart(id) {
 
 function changeQty(id, delta) {
   if (!cart[id]) return;
+
+  if (delta > 0 && cart[id] >= MAX_ITEM_QUANTITY) {
+    showToast(`Maximum quantity is ${MAX_ITEM_QUANTITY}`, 'error');
+    return;
+  }
+
   cart[id] += delta;
   if (cart[id] <= 0) {
     delete cart[id];
@@ -1254,7 +1408,7 @@ function renderCart() {
 
   const body = document.getElementById('cartBody');
   if (items.length === 0) {
-    body.innerHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛒</div>Your order is empty<br><span style="font-size:0.85rem;">Tap a product to add it.</span></div>`;
+    body.innerHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛒</div>Your order is empty<br><span style="font-size:0.85rem;">Tap the + button to add a product.</span></div>`;
     return;
   }
 
@@ -1265,13 +1419,13 @@ function renderCart() {
           <div class="cart-line-name">${i.name}</div>
           <div class="cart-line-unit">${peso(i.price)} each</div>
         </div>
-        <button class="remove-btn" onclick="removeItem('${i.id}')">✕</button>
+        <button class="remove-btn" onclick="removeItem('${i.id}')" aria-label="Remove ${i.name} from order">✕</button>
       </div>
       <div class="cart-line-bottom">
         <div class="qty-control">
-          <button class="qty-btn" onclick="changeQty('${i.id}', -1)">−</button>
-          <span class="qty-val">${i.qty}</span>
-          <button class="qty-btn" onclick="changeQty('${i.id}', 1)">+</button>
+          <button class="qty-btn" onclick="changeQty('${i.id}', -1)" aria-label="Decrease ${i.name} quantity">−</button>
+          <span class="qty-val" aria-label="${i.name} quantity">${i.qty}</span>
+          <button class="qty-btn" onclick="changeQty('${i.id}', 1)" aria-label="Increase ${i.name} quantity">+</button>
         </div>
         <div class="cart-line-subtotal">${peso(i.subtotal)}</div>
       </div>
@@ -1329,6 +1483,12 @@ function renderQuickAmounts() {
 }
 
 function setCashAmount(v) {
+  const maxCashAmount = Number('9'.repeat(MAX_CASH_DIGITS));
+  if (!Number.isFinite(v) || v < 0 || v > maxCashAmount) {
+    showToast(`Cash amount is limited to ${MAX_CASH_DIGITS} digits`, 'error');
+    return;
+  }
+
   cashAmount = v;
   document.getElementById('cashInput').value = v.toString();
   renderChangePreview();
@@ -1338,7 +1498,15 @@ function keyPress(k) {
   let str = document.getElementById('cashInput').value;
   if (k === 'Clear') { str = '0'; }
   else if (k === '⌫') { str = str.length > 1 ? str.slice(0, -1) : '0'; }
-  else { str = (str === '0') ? k : str + k; }
+  else {
+    if (!/^\d$/.test(k)) return;
+    const next = (str === '0') ? k : str + k;
+    if (next.length > MAX_CASH_DIGITS) {
+      showToast(`Cash amount is limited to ${MAX_CASH_DIGITS} digits`, 'error');
+      return;
+    }
+    str = next;
+  }
   str = str.replace(/^0+(?=\d)/, '');
   document.getElementById('cashInput').value = str;
   cashAmount = parseFloat(str) || 0;
@@ -1364,7 +1532,7 @@ function renderChangePreview() {
 function payCash() {
   const total = cartTotal();
   const errBox = document.getElementById('cashError');
-  if (!cashAmount || cashAmount <= 0) {
+  if (!Number.isFinite(cashAmount) || cashAmount <= 0) {
     errBox.innerHTML = `<div class="error-msg">⚠ Please enter an amount.</div>`;
     showToast('Invalid amount', 'error');
     return;
@@ -1391,7 +1559,14 @@ function payQR() {
 }
 
 /* ---------- Card payment (simulated) ---------- */
+function cancelCardPayment() {
+  if (cardPaymentTimer === null) return;
+  clearTimeout(cardPaymentTimer);
+  cardPaymentTimer = null;
+}
+
 function renderCard() {
+  cancelCardPayment();
   document.getElementById('cardDue').textContent = peso(cartTotal());
   document.getElementById('cardProcessingArea').innerHTML = '';
   document.getElementById('cardProcessBtn').disabled = false;
@@ -1399,6 +1574,18 @@ function renderCard() {
 }
 
 function payCard() {
+  if (cardPaymentTimer !== null || lastTxn) return;
+
+  const transactionSnapshot = {
+    items: cartItems().map(item => ({ ...item })),
+    total: cartTotal(),
+  };
+  if (transactionSnapshot.items.length === 0) {
+    showToast('Your order is empty', 'error');
+    goTo('order');
+    return;
+  }
+
   const btn = document.getElementById('cardProcessBtn');
   btn.disabled = true;
   btn.textContent = 'Processing…';
@@ -1409,21 +1596,35 @@ function payCard() {
   requestAnimationFrame(() => {
     document.getElementById('procFill').style.width = '100%';
   });
-  setTimeout(() => {
-    const total = cartTotal();
-    completeTransaction('Credit/Debit Card', total, 0);
+  cardPaymentTimer = setTimeout(() => {
+    cardPaymentTimer = null;
+    completeTransaction('Credit/Debit Card', transactionSnapshot.total, 0, transactionSnapshot);
   }, 1500);
 }
 
 /* ---------- Completion ---------- */
-function completeTransaction(method, paid, change) {
-  const total = cartTotal();
-  txnCounter += 1;
-  const year = new Date().getFullYear();
+function completeTransaction(method, paid, change, snapshot = null) {
+  if (lastTxn) return false;
+
+  const items = snapshot ? snapshot.items.map(item => ({ ...item })) : cartItems();
+  const total = snapshot ? snapshot.total : cartTotal();
+  if (
+    items.length === 0 ||
+    !Number.isFinite(total) ||
+    !Number.isFinite(paid) ||
+    !Number.isFinite(change) ||
+    total <= 0 ||
+    paid < total ||
+    change < 0
+  ) {
+    showToast('Unable to complete this transaction', 'error');
+    return false;
+  }
+
   lastTxn = {
-    id: `TXN-${year}-${String(txnCounter).padStart(5, '0')}`,
+    id: nextTransactionId(),
     date: new Date(),
-    items: cartItems(),
+    items,
     total, method, paid, change,
   };
   paymentMethod = method;
@@ -1436,6 +1637,7 @@ function completeTransaction(method, paid, change) {
 
   showToast('Transaction completed successfully', 'success');
   goTo('success');
+  return true;
 }
 
 /* ---------- Receipt ---------- */
@@ -1463,6 +1665,7 @@ goTo = function(screen) {
 
 /* ---------- New transaction (reset) ---------- */
 function newTransaction() {
+  cancelCardPayment();
   cart = {};
   paymentMethod = null;
   lastTxn = null;
